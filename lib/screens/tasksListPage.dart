@@ -1,19 +1,30 @@
 import 'package:flutter/material.dart';
+import 'package:todo1/models/Task.dart';
 
 class TasksListPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final tasks = Task.fetchAllTitle();
+
     return Scaffold(
       appBar: AppBar(
         title: Text('Here\'s your tasks'),
       ),
-      body: ListView(
-        children: [
-          TaskItem(1),
-          TaskItem(2, Colors.blue),
-        ],
+      body: ListView.builder(
+        itemCount: tasks.length,
+        itemBuilder: (context, index) => _itemBuilder(context, tasks[index]),
       ),
+      // body: ListView(
+      //   children: [
+      //     TaskItem(1),
+      //     TaskItem(2, Colors.blue),
+      //   ],
+      // ),
     );
+  }
+
+  Widget _itemBuilder(BuildContext context, Task task) {
+    return TaskItem(task.taskId);
   }
 }
 
