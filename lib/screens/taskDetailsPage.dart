@@ -12,11 +12,12 @@ class TaskDetailsPage extends StatefulWidget {
 
 class _TaskDetailsPageState extends State<TaskDetailsPage> {
   DateTime _date;
+  TimeOfDay _time;
   Task task;
 
   @override
   void initState() {
-    task = Task.fetchById(widget._taskId);
+    task = StoredTasks.fetchById(widget._taskId);
   }
 
   @override
@@ -27,14 +28,16 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
       ),
       body: Column(
         children: [
-          Text('${task.date}'),
+          Text('{taskId-${task.taskId}}'),
           // Text(task.taskId.toString()),
           // Text(task.name),
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: TextFormField(
+              initialValue: '${task.name}',
+              onChanged: (newName) => _changeTaskName(newName, task.taskId),
               decoration: InputDecoration(
-                hintText: 'Enter Name',
+                hintText: '${'Enter name'}',
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(32.0),
                   borderSide: BorderSide(),
@@ -47,7 +50,8 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
             children: [
               Padding(
                 padding: const EdgeInsets.all(8.0),
-                child: Text('${task.date.toLocal()}'.split(' ')[0]),
+                // child: Text('${task.date.toLocal()}'.split(' ')[0]),
+                child: printDate(task.date),
               ),
               IconButton(
                   icon: Icon(Icons.date_range),
@@ -61,7 +65,28 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
                     if (selectedDate != null && selectedDate != _date)
                       setState(() {
                         // _date = selectedDate;
-                        Task.changeDate(task.taskId, selectedDate);
+                        StoredTasks.changeDate(task.taskId, selectedDate);
+                      });
+                  })
+            ],
+          ),
+
+          Row(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: printTime(task.time),
+              ),
+              IconButton(
+                  icon: Icon(Icons.timer),
+                  onPressed: () async {
+                    final TimeOfDay selectedTime = await showTimePicker(
+                      initialTime: TimeOfDay.now(),
+                      context: context,
+                    );
+                    if (selectedTime != null && selectedTime != _time)
+                      setState(() {
+                        StoredTasks.changeTime(task.taskId, selectedTime);
                       });
                   })
             ],
@@ -87,5 +112,26 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
         ],
       ),
     );
+  }
+
+  void _changeTaskName(String newName, int taskId) {
+    StoredTasks.changeName(taskId, newName);
+  }
+
+  Text printDate(DateTime date) {
+    if (date != null) {
+      return Text('$date.toLocal()}'.split(' ')[0]);
+    } else {
+      return Text('Date not selected');
+    }
+  }
+
+  Text printTime(TimeOfDay time) {
+    if (time != null) {
+      int len = time.toString().length;
+      return Text('$time'.substring(len - 5, len - 1));
+    } else {
+      return Text('Time not selected');
+    }
   }
 }

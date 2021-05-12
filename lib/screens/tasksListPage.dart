@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:todo1/models/Task.dart';
 
-class TasksListPage extends StatelessWidget {
+class TasksListPage extends StatefulWidget {
+  @override
+  _TasksListPageState createState() => _TasksListPageState();
+}
+
+class _TasksListPageState extends State<TasksListPage> {
   @override
   Widget build(BuildContext context) {
-    final tasks = Task.fetchAllTitle();
+    final tasks = StoredTasks.fetchAllTitle();
 
     return Scaffold(
       appBar: AppBar(
@@ -13,6 +19,12 @@ class TasksListPage extends StatelessWidget {
       body: ListView.builder(
         itemCount: tasks.length,
         itemBuilder: (context, index) => _itemBuilder(context, tasks[index]),
+      ),
+      floatingActionButton: FloatingActionButton(
+        child: Icon(Icons.add),
+        onPressed: () => _addNewTask(context),
+        // onPressed: () => ScaffoldMessenger.of(context)
+        //     .showSnackBar(new SnackBar(content: Text('button pressed'))),
       ),
       // body: ListView(
       //   children: [
@@ -24,7 +36,33 @@ class TasksListPage extends StatelessWidget {
   }
 
   Widget _itemBuilder(BuildContext context, Task task) {
-    return TaskItem(task.taskId);
+    return Slidable(
+      actionPane: SlidableDrawerActionPane(),
+      actionExtentRatio: 0.2,
+      closeOnScroll: true,
+      child: TaskItem(task.taskId),
+      actions: [
+        IconSlideAction(
+          color: Colors.red[600],
+          icon: Icons.delete,
+          onTap: () => _deleteTask(context, task.taskId),
+        ),
+      ],
+    );
+  }
+
+  void _deleteTask(BuildContext context, int taskId) {
+    setState(() {
+      StoredTasks.deleteTask(taskId);
+    });
+  }
+
+  void _addNewTask(BuildContext context) {
+    setState(() {
+      int newId = StoredTasks.addTask();
+      Navigator.pushNamed(context, '/taskDetailsPage',
+          arguments: {'taskId': newId});
+    });
   }
 }
 
@@ -39,21 +77,30 @@ class TaskItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Container(
-          padding: const EdgeInsets.fromLTRB(_hPad, _vPad, _hPad, _vPad),
-          child: Text('Task $_taskNum'),
-          color: _clr,
-        ),
-        IconButton(
-          // onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-          //     new SnackBar(content: Text('Task$_taskNum edit pressed'))),
-          onPressed: () => Navigator.pushNamed(context, '/taskDetailsPage',
-              arguments: {'taskId': _taskNum}),
-          icon: Icon(Icons.edit),
-        )
-      ],
+    return ListTile(
+      leading: Text('${StoredTasks.fetchById(_taskNum).name}'),
+      trailing: IconButton(
+        onPressed: () => Navigator.pushNamed(context, '/taskDetailsPage',
+            arguments: {'taskId': _taskNum}),
+        icon: Icon(Icons.edit),
+      ),
     );
+
+    // return Row(
+    //   children: [
+    //     Container(
+    //       padding: const EdgeInsets.fromLTRB(_hPad, _vPad, _hPad, _vPad),
+    //       child: Text('${StoredTasks.fetchById(_taskNum).name}'),
+    //       color: _clr,
+    //     ),
+    // IconButton(
+    //   // onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
+    //   //     new SnackBar(content: Text('Task$_taskNum edit pressed'))),
+    //   onPressed: () => Navigator.pushNamed(context, '/taskDetailsPage',
+    //       arguments: {'taskId': _taskNum}),
+    //   icon: Icon(Icons.edit),
+    // )
+    //   ],
+    // );
   }
 }
